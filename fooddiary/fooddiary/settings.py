@@ -103,10 +103,10 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
         'NAME': 'fooddiary',
-        'USER': 'fooddiary',
-        'PASSWORD': 'fooddiary',
-        'HOST': 'localhost',
-        'PORT': '',
+        'USER': 'postgres',
+        'PASSWORD': 'postgres',
+        'HOST': 'db',
+        'PORT': '5432',
     }
 }
 
