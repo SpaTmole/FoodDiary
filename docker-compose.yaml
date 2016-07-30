@@ -1,13 +1,70 @@
-version: '2'
-services:
-  db:
-    image: postgres
-  web:
-    build: .
-    command: bash wait-for-it/wait-for-it.sh -t 15 db:5432 -- python fooddiary/manage.py runserver 0.0.0.0:8000
-    volumes:
-      - .:/code
-    ports:
-      - "8000:8000"
-    depends_on:
-      - db
+postgresql:
+  image: jcalazan/postgresql
+  environment:
+    - POSTGRESQL_DB=fooddiary
+    - POSTGRESQL_USER=postgres
+    - POSTGRESQL_PASSWORD=postgresql
+  volumes:
+    - ~/dockerfiles/FoodDiary/postgresql:/var/lib/postgresql
+  ports:
+    - "5432:5432"
+
+rabbitmq:
+  image: jcalazan/rabbitmq
+  ports:
+    - "15672:15672"
+
+# NOTES:
+#   - The C_FORCE_ROOT variable allows celery to run as the root user.
+celery:
+  image: jcalazan/django
+  environment:
+    - C_FORCE_ROOT=true
+    - DATABASE_HOST=postgresql
+    - BROKER_URL=amqp://guest:guest@rabbitmq//
+  working_dir: /FoodDiary
+  command: bash -c "sleep 3 && cd fooddiary && celery -A fooddiary worker -E -l info --concurrency=3"
+  volumes:
+    - .:/FoodDiary
+    - ~/dockerfiles/FoodDiary/python:/usr/local/lib/python2.7
+    - ~/dockerfiles/FoodDiary/bin:/usr/local/bin
+  links:
+    - postgresql
+    - rabbitmq
+
+# NOTES:
+#   - The C_FORCE_ROOT variable allows celery to run as the root user.
+flower:
+  image: jcalazan/django
+  environment:
+    - C_FORCE_ROOT=true
+    - DATABASE_HOST=postgresql
+    - BROKER_URL=amqp://guest:guest@rabbitmq//
+  working_dir: /FoodDiary
+  command: bash -c "sleep 3 && cd fooddiary && celery -A fooddiary flower --port=5555"
+  volumes:
+    - .:/FoodDiary
+    - ~/dockerfiles/FoodDiary/python:/usr/local/lib/python2.7
+    - ~/dockerfiles/FoodDiary/bin:/usr/local/bin
+  ports:
+    - "5555:5555"
+  links:
+    - postgresql
+    - rabbitmq
+
+django:
+  image: jcalazan/django
+  environment:
+    - DATABASE_HOST=postgresql
+    - BROKER_URL=amqp://guest:guest@rabbitmq//
+  working_dir: /FoodDiary
+  command: bash -c "sleep 3 && cd fooddiary && python manage.py runserver_plus 0.0.0.0:80"
+  volumes:
+    - .:/FoodDiary
+    - ~/dockerfiles/FoodDiary/python:/usr/local/lib/python2.7
+    - ~/dockerfiles/FoodDiary/bin:/usr/local/bin
+  ports:
+    - "8000:80"
+  links:
+    - postgresql
+    - rabbitmq

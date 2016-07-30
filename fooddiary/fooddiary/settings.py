@@ -37,6 +37,9 @@ FOODDIARY_APPS = [
 ]
 
 INSTALLED_APPS = [
+    # Grappelli needs to be defined before the admin.
+    'grappelli',
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -44,7 +47,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
+
+    # 3rd-party apps.
     'rest_framework',
+    'compressor',
+    'django_extensions',
 ] + FOODDIARY_APPS
 
 MIDDLEWARE_CLASSES = [
@@ -98,15 +105,14 @@ REST_FRAMEWORK = {
 
 # Database
 # https://docs.djangoproject.com/en/1.9/ref/settings/#databases
-
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'fooddiary',
-        'USER': 'postgres',
-        'PASSWORD': 'postgres',
-        'HOST': 'db',
-        'PORT': '5432',
+        'NAME': os.getenv('DATABASE_NAME', 'fooddiary'),
+        'USER': os.getenv('DATABASE_USER', 'postgres'),
+        'PASSWORD': os.getenv('DATABASE_PASSWORD', 'postgresql'),
+        'HOST': os.getenv('DATABASE_HOST', '127.0.0.1'),
+        'PORT': os.getenv('DATABASE_PORT', '5432'),
     }
 }
 
